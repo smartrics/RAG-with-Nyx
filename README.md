@@ -50,21 +50,21 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize logging
+logger.remove()
+logger.add(sys.stderr, level="ERROR") ## prints on console only errors
 logger.add("chatbot.log", rotation="1 MB", level="DEBUG")
-
-logger.info("Nyx client initialized.")
 ```
 
 Run it and an empty log file is created `python chatbot.py`
 
 #### Nyx Client
 
-Access to nyx is configured by creating a `.env` file and setting the following variables
+Access to Nyx is configured by creating a `.env` file and setting the following variables
 
 ```bash
-NYX_URL=<your nyx instance endpoint>
-NYX_EMAIL=<your nyx email>
-NYX_PASSWORD=<your nyx password>
+NYX_URL=<your Nyx instance endpoint>
+NYX_EMAIL=<your Nyx email>
+NYX_PASSWORD=<your Nyx password>
 ```
 
 The chatbot then creates the Nyx client and tests the configuration:
@@ -79,6 +79,8 @@ from nyx_client import NyxClient
 load_dotenv()
 
 # Initialize logging
+logger.remove() ## removes default handler that prints everything on console
+logger.add(sys.stderr, level="ERROR") ## prints on console only errors
 logger.add("chatbot.log", rotation="1 MB", level="DEBUG")
 
 nyx_client = NyxClient()
@@ -86,3 +88,6 @@ logger.info("Nyx client initialized.")
 
 print(nyx_client.config)
 ```
+
+Running `python chatbot.py` produces a log message and the printout of the config in the `.env`
+
