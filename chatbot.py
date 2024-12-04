@@ -7,4 +7,3 @@ load_dotenv()
 
 # Initialize logging
 logger.add("chatbot.log", rotation="1 MB", level="DEBUG")
-
