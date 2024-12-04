@@ -91,7 +91,7 @@ print(nyx_client.config)
 
 Running `python chatbot.py` produces a log message and the printout of the config in the `.env`
 
-#### Main loop
+### Main loop
 
 The main loop of the chatbot is an infinite loop where the user is invited to type a question. If the user types `exit` the loop exits and chatbot terminates.
 
@@ -137,5 +137,113 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+```
+
+### Inferring genre and categories from the user prompt
+
+We will use an OpenAI model to infer, from the user input, genre and categories to be used to search data in Nyx. Let's add the following to the chatbot.py
+
+#### Import openai library
+
+```python
+import openai
+import json
+```
+
+#### Initialize with Key
+
+After the `load_dotenv()`:
+
+```python
+# Initialize OpenAI API (requires OpenAI API key in the .env file)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    logger.error("OpenAI API key missing in .env file.")
+    exit(1)
+
+openai.api_key = OPENAI_API_KEY
+
+def infer_categories_and_genres(genres: list[str], categories: list[str], query: str, model: str = "gpt-4o-mini") -> dict:
+    """
+    Uses an openai model (default "gpt-4o-mini") to infer categories and genres from the user query.
+    
+    Args:
+        genres (list[str]): A list of genres to choose from
+        categories (list[str]): A list of categories to choose from
+        query (str): The user's free-text query.
+        model (str): The model (default "gpt-4o-mini").
+
+    Returns:
+        dict: A dictionary with inferred categories and genres.
+    """
+    try:
+        # Example prompt for gpt4o mini
+        prompt = f"""
+        
+        Extract zero or more categories and zero or more genres from the following query;
+        use the provided genres and categories only:
+        Genres: [{genres}]
+        Categories: [{categories}]
+        Query: "{query}"
+        Provide the response in JSON format with 'categories' and 'genres' as keys.
+        """
+        
+        logger.debug(f"Sending query to GPT: {query}")
+        response = openai.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0,
+        )
+
+        result = response.choices[0].message.content.strip()
+        logger.debug(f"Raw response from GPT: {result}")
+        
+        # Convert result to a dictionary
+        inferred_data = json.loads(result)  # Use a safer JSON parsing method in production
+        logger.info(f"Inferred keywords: {inferred_data}")
+        return inferred_data
+
+    except Exception as e:
+        logger.error(f"Error during keyword inference: {e}")
+        return {"categories": [], "genres": []}
+```
+
+Then the `main()` becomes
+
+```python
+def main():
+    """
+    Main function to handle user queries interactively.
+    """
+    logger.info("Starting chatbot...")
+    print("Welcome to the CSV Chatbot powered by Nyx!")
+    print("Type 'exit' to quit.")
+
+    genres = nyx_client.genres()
+    categories = nyx_client.categories()
+
+    while True:
+        try:
+            user_query = input("\nEnter your query: ").strip()
+            if user_query.lower() == 'exit':
+                print("Goodbye!")
+                break
+
+            # Step 1: Infer categories and genres
+            inferred_keywords = infer_categories_and_genres(genres=genres, categories=categories, query=user_query)
+            print(f"Inferred Categories: {inferred_keywords.get('categories')}")
+            print(f"Inferred Genres: {inferred_keywords.get('genres')}")
+            
+            # Placeholder: Add keyword inference, search, and analysis here
+            logger.debug(f"User query received: {user_query}")
+            print("Processing your query...")  # Placeholder for future steps
+
+        except KeyboardInterrupt:
+            print("\nGoodbye!")
+            break
 
 ```
