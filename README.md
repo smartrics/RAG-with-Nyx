@@ -37,3 +37,52 @@ rag-with-nyx/
 └── chatbot.py  # Main chatbot script
 ```
 
+#### Logging
+
+The chatbot.py file is
+
+```python
+from loguru import logger
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Initialize logging
+logger.add("chatbot.log", rotation="1 MB", level="DEBUG")
+
+logger.info("Nyx client initialized.")
+```
+
+Run it and an empty log file is created `python chatbot.py`
+
+#### Nyx Client
+
+Access to nyx is configured by creating a `.env` file and setting the following variables
+
+```bash
+NYX_URL=<your nyx instance endpoint>
+NYX_EMAIL=<your nyx email>
+NYX_PASSWORD=<your nyx password>
+```
+
+The chatbot then creates the Nyx client and tests the configuration:
+
+```python
+from loguru import logger
+import os
+from dotenv import load_dotenv
+from nyx_client import NyxClient
+
+# Load environment variables
+load_dotenv()
+
+# Initialize logging
+logger.add("chatbot.log", rotation="1 MB", level="DEBUG")
+
+nyx_client = NyxClient()
+logger.info("Nyx client initialized.")
+
+print(nyx_client.config)
+```
