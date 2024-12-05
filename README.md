@@ -517,28 +517,28 @@ This approach allows more precise discovery and retrieval of datasets beyond sim
 ### Enhanced Content Metadata Filtering
 In addition to structural metadata (file description, genre, categories, etc.), further refinements could be made by filtering based on content metadata, which describes the actual data within files:
 
-- *Column-Level Metadata*: Filter datasets based on column descriptions, such as requiring a dataset to contain specific fields like "Revenue," "Timestamp," or "Region."
-- *Timestamps and Temporal Data*: Use temporal metadata to limit datasets to a specific time range, ensuring relevance for time-sensitive queries.
-- *Semantic Validation*: Match datasets whose content aligns with user-defined criteria, such as numeric ranges, categorical values, or semantic descriptions of the data.
+- **Column-Level Metadata**: Filter datasets based on column descriptions, such as requiring a dataset to contain specific fields like "Revenue," "Timestamp," or "Region."
+- **Timestamps and Temporal Data**: Use temporal metadata to limit datasets to a specific time range, ensuring relevance for time-sensitive queries.
+- **Semantic Validation**: Match datasets whose content aligns with user-defined criteria, such as numeric ranges, categorical values, or semantic descriptions of the data.
 This additional layer of filtering provides more relevant and targeted datasets, allowing for deeper and more accurate analyses and reduction of costs.
 
 ### Validation of Results Using Knowledge Graphs or Additional LLMs
 To ensure the accuracy and relevance of analysis results, the chatbot could incorporate a validation layer:
 
-- *Knowledge Graph Integration*: Validate results against a domain-specific knowledge graph. For example:
+- **Knowledge Graph Integration**: Validate results against a domain-specific knowledge graph. For example:
     - Cross-check calculated values with known standards or published data.
     - Detect inconsistencies or anomalies in the analysis results.
-- *Second-Layer LLM Validation*:
+- **Second-Layer LLM Validation**:
     - Use a secondary LLM to review and score the accuracy and consistency of the primary LLM’s response.
     - Incorporate accuracy scoring into the response, with the chatbot flagging uncertain results for further review by the user.
-- *User-Feedback Loop*:
+- **User-Feedback Loop**:
     - Allow users to provide feedback on validation results to improve future accuracy dynamically.
 
 ### Better Error Handling with Human-in-the-Loop
 To improve reliability and user trust, the chatbot can incorporate human validation in its workflows:
 
-- *Confirmation Prompts*: After generating queries or inferred results, the chatbot should present them to the user for validation before executing critical actions, such as searching or retrieving files.
-- *Error Recovery*: For ambiguous responses or failed operations, the chatbot could:
+- **Confirmation Prompts**: After generating queries or inferred results, the chatbot should present them to the user for validation before executing critical actions, such as searching or retrieving files.
+- **Error Recovery**: For ambiguous responses or failed operations, the chatbot could:
     - Provide clear explanations of errors.
     - Suggest possible fixes or alternative actions.
     - Prompt the user for clarification when required.
@@ -546,19 +546,19 @@ To improve reliability and user trust, the chatbot can incorporate human validat
 ### Enhanced Validation to Prevent Vulnerabilities
 Stronger validation mechanisms should be implemented to safeguard against issues like invalid inputs, prompt injection, or unintended responses:
 
-- *Input Sanitization*: Validate and sanitize user inputs to prevent harmful or malformed data from influencing the chatbot's behavior.
-- *Prompt Validation*: Apply rigorous validation to ensure generated prompts and responses align with predefined rules and constraints.
-- *Test Coverage*: Implement unit tests for critical functions, including SPARQL generation, file retrieval, and prompt construction, to catch potential issues early.
+- **Input Sanitization**: Validate and sanitize user inputs to prevent harmful or malformed data from influencing the chatbot's behavior.
+- **Prompt Validation**: Apply rigorous validation to ensure generated prompts and responses align with predefined rules and constraints.
+- **Test Coverage**: Implement unit tests for critical functions, including SPARQL generation, file retrieval, and prompt construction, to catch potential issues early.
 
 ### Support for Multimodal Data
 Expand the chatbot to handle diverse data types beyond CSV files, making it suitable for multimodal datasets:
 
-1. Supported Formats:
+1. **Supported Formats**:
     - JSON
     - XML
     - Images
     - Videos
     - Sensor data streams
-2. Unified Analysis:
+2. **Unified Analysis**:
     - Use the LLM to describe, compare, and correlate data from different modalities.
     - For instance, integrate CSV-based sales data with geospatial information from JSON or sensor readings for a richer analysis.
