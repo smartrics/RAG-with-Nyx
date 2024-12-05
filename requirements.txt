@@ -2,3 +2,4 @@ nyx-client
 openai
 python-dotenv
 loguru
+pandas
