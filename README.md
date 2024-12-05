@@ -495,3 +495,50 @@ def main():
             print("\nGoodbye!")
             break
 ```
+
+## Enhancements for Future Development
+The current implementation of the Chatbot can be extended with the following advanced features to improve its functionality, robustness, and versatility:
+
+### Sophisticated Metadata Querying with SPARQL
+Nyx offers the ability to retrieve data using advanced querying of associated metadata via SPARQL. Instead of relying solely on inferred genres and categories, the chatbot could:
+
+Leverage the LLM to dynamically generate WHERE clauses for a predefined SPARQL SELECT query.
+Enable fine-grained filtering of datalinks based on metadata attributes, such as timestamps, geographical regions, or data provenance.
+Example Enhancement: Use the user query to construct a SPARQL query like:
+```sparql
+SELECT ?dataLink WHERE {
+  ?dataLink nyx:category "sales".
+  ?dataLink nyx:region "Europe".
+  ?dataLink nyx:format "text/csv".
+}
+```
+This approach allows more precise discovery and retrieval of datasets beyond simple keyword matches.
+
+### Better Error Handling with Human-in-the-Loop
+To improve reliability and user trust, the chatbot can incorporate human validation in its workflows:
+
+- *Confirmation Prompts*: After generating queries or inferred results, the chatbot should present them to the user for validation before executing critical actions, such as searching or retrieving files.
+- *Error Recovery*: For ambiguous responses or failed operations, the chatbot could:
+    - Provide clear explanations of errors.
+    - Suggest possible fixes or alternative actions.
+    - Prompt the user for clarification when required.
+
+### Enhanced Validation to Prevent Vulnerabilities
+Stronger validation mechanisms should be implemented to safeguard against issues like invalid inputs, prompt injection, or unintended responses:
+
+- *Input Sanitization*: Validate and sanitize user inputs to prevent harmful or malformed data from influencing the chatbot's behavior.
+- *Prompt Validation*: Apply rigorous validation to ensure generated prompts and responses align with predefined rules and constraints.
+- *Test Coverage*: Implement unit tests for critical functions, including SPARQL generation, file retrieval, and prompt construction, to catch potential issues early.
+
+### Support for Multimodal Data
+Expand the chatbot to handle diverse data types beyond CSV files, making it suitable for multimodal datasets:
+
+1. Supported Formats:
+    - JSON
+    - XML
+    - Images
+    - Videos
+    - Sensor data streams
+2. Unified Analysis:
+    - Use the LLM to describe, compare, and correlate data from different modalities.
+    - For instance, integrate CSV-based sales data with geospatial information from JSON or sensor readings for a richer analysis.
