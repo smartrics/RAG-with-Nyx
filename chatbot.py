@@ -1,14 +1,16 @@
-from loguru import logger
 import os, sys
 import json
+import openai
+import pandas as pd
+from loguru import logger
 from dotenv import load_dotenv
 from nyx_client import NyxClient, Data
-import openai
+
 
 # Load environment variables
 load_dotenv()
 
-# Initialize OpenAI API (requires OpenAI API key in the .env file)
+# Initialise OpenAI API (requires OpenAI API key in the .env file)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     logger.error("OpenAI API key missing in .env file.")
@@ -16,13 +18,13 @@ if not OPENAI_API_KEY:
 
 openai.api_key = OPENAI_API_KEY
 
-# Initialize logging
+# Initialise logging
 logger.remove()
 logger.add(sys.stderr, level="ERROR") ## prints on console only errors
 logger.add("chatbot.log", rotation="1 MB", level="DEBUG")
 
 nyx_client = NyxClient()
-logger.info("Nyx client initialized.")
+logger.info("Nyx client initialised.")
 
 def infer_categories_and_genres(genres: list[str], categories: list[str], query: str, model: str = "gpt-4") -> dict:
     """
@@ -145,7 +147,71 @@ def retrieve_csv_files(client: NyxClient, data: list[Data], download_path: str =
 
     return downloaded_files
 
+def analyse_csv_files(files: list[str], query: str, model: str = "gpt-4") -> str:
+    """
+    Analyse CSV files using GPT-4 to answer a specific query or summarise content.
 
+    Args:
+        files (list[str]): List of file paths to the downloaded CSVs.
+        query (str): The user's question or query.
+        model (str): The OpenAI model to use for analysis.
+
+    Returns:
+        str: The analysis result.
+    """
+    try:
+        # Load CSV files into dataframes
+        dataframes = []
+        for file in files:
+            try:
+                df = pd.read_csv(file)
+                dataframes.append(df)
+            except Exception as e:
+                logger.error(f"Error loading file {file}: {e}")
+
+        if not dataframes:
+            return "No valid data found in the downloaded files."
+
+        # Concatenate all dataframes for analysis
+        combined_data = pd.concat(dataframes, ignore_index=True)
+
+        # Prepare the data for GPT-4
+        csv_preview = combined_data.head(10).to_string()  # Show a sample of the data
+        csv_summary = combined_data.describe(include='all').to_string()  # Summary statistics
+
+        # Construct the GPT-4 prompt
+        prompt = f"""
+        You are analyzing CSV data. Here is a sample of the data:
+        {csv_preview}
+
+        Summary statistics of the data:
+        {csv_summary}
+
+        User query: "{query}"
+
+        If the query is specific, answer it based on the data. If the query is generic or not a question,
+        provide a summary of the data.
+        """
+
+        logger.debug(f"Sending analysis query to GPT: {query}")
+
+        response = openai.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": "You are a data analyst."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0,
+        )
+
+        result = response.choices[0].message.content.strip()
+        logger.debug(f"Analysis result: {result}")
+        return result
+
+    except Exception as e:
+        logger.error(f"Error during CSV analysis: {e}")
+        return "An error occurred during analysis. Please try again."
+    
 def main():
     """
     Main function to handle user queries interactively.
@@ -156,45 +222,66 @@ def main():
 
     genres = nyx_client.genres()
     categories = nyx_client.categories()
+    downloaded_files = []
 
     while True:
         try:
-            user_query = input("\nEnter your query: ").strip()
-            if user_query.lower() == 'exit':
-                print("Goodbye!")
-                break
+            if not downloaded_files:
+                # Step 1: Get a new query
+                user_query = input("\nEnter your query: ").strip()
+                if user_query.lower() == 'exit':
+                    print("Goodbye!")
+                    break
 
-            logger.debug(f"User query received: {user_query}")
-            print("Processing your query...")  # Placeholder for future steps
+                logger.debug(f"User query received: {user_query}")
+                print("Processing your query...")
 
-            # Step 1: Infer categories and genre
-            inferred_keywords = infer_categories_and_genres(genres=genres, categories=categories, query=user_query)
-            inferred_categories = inferred_keywords.get('categories')
-            inferred_genres = inferred_keywords.get('genres')
-            print(f"Matched genres {inferred_genres}, categories {inferred_categories}")
+                # Step 2: Infer categories and genres
+                inferred_keywords = infer_categories_and_genres(genres=genres, categories=categories, query=user_query)
+                inferred_categories = inferred_keywords.get('categories')
+                inferred_genres = inferred_keywords.get('genres')
+                print(f"Matched genres: {inferred_genres}, categories: {inferred_categories}")
+
+                # Step 3: Search Nyx for matching files
+                matching_files = search_nyx_for_files(
+                    client=nyx_client,
+                    categories=inferred_categories,
+                    genres=inferred_genres,
+                )
+
+                if not matching_files:
+                    print("No matching files found.")
+                    continue
+
+                # Step 4: Retrieve CSV files
+                downloaded_files = retrieve_csv_files(client=nyx_client, data=matching_files)
+
+                if downloaded_files:
+                    print(f"Downloaded files: {downloaded_files}")
+                else:
+                    print("No files were downloaded.")
+                    continue
+
+            # Step 5: Inner loop for analysis
+            print("\nYou can now ask specific questions about the downloaded files.")
+            print("Type 'exit' to finish analyzing the files and return to the main menu.")
             
-            # Step 2: Search Nyx for matching files
-            matching_files = search_nyx_for_files(
-                client=nyx_client,
-                categories=inferred_categories,
-                genres=inferred_genres,
-            )
+            while True:
+                analysis_query = input("\nEnter your question about the files: ").strip()
+                if analysis_query.lower() == 'exit':
+                    print("Returning to the main menu...")
+                    downloaded_files = []  # Clear the files for a fresh query
+                    break
 
-            if not matching_files:
-                print("No matching files found.")
-                continue
+                # Analyse the files
+                analysis_result = analyse_csv_files(downloaded_files, analysis_query)
+                print("\nAnalysis Result:")
+                print(analysis_result)
 
-            # Step 3: Retrieve CSV files
-            downloaded_files = retrieve_csv_files(client=nyx_client, data=matching_files)
-
-            if downloaded_files:
-                print(f"Downloaded files: {downloaded_files}")
-            else:
-                print("No files were downloaded.")
-                
         except KeyboardInterrupt:
             print("\nGoodbye!")
             break
-
+        
+        
 if __name__ == "__main__":
     main()
