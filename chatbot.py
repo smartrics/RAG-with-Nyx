@@ -263,7 +263,11 @@ def main():
                     continue
 
             # Step 5: Inner loop for analysis
-            print("\nYou can now ask specific questions about the downloaded files.")
+             # Automatically analyze the initial user query
+            print("\nInitial Analysis Result (based on your query):")
+            print(analyse_csv_files(downloaded_files, user_query))
+            
+            print("\nYou can now ask other specific questions about the downloaded files.")
             print("Type 'exit' to finish analyzing the files and return to the main menu.")
             
             while True:
