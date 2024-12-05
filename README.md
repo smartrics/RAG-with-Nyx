@@ -1,12 +1,16 @@
 # RAG with Nyx
 
-This sameple project shows a simple RAG application with Nyx. It uses LangChain to perform basic analysis of a CSV file using Nyx as the files repository of data and metadata.
+This sample project demonstrates a simple Retrieval-Augmented Generation (RAG) application. The goal is to illustrate how to perform powerful retrieval operations using the **Nyx Exchange**. It uses OpenAI models to perform basic analysis of a CSV file, with the Nyx Exchange serving as a document repository.
 
-## Flow
+Files are retrieved the Nyx Exchange using a simple search based on Genre and Categories inferred from the user's question. While this approach is simplistic, it effectively demonstrates the mechanics of using the Nyx SDK to perform retrieval operations on files relevant to the user query.
 
-### Setup
+This project highlights the fundamentals of leveraging Nyx as a knowledge repository for contextual data retrieval. For advanced use cases, more sophisticated and metadata-driven methods—such as SPARQL queries or column-level metadata filtering—can be adopted by following the same pattern illustrated here.
 
-#### Create virtual environment and activate it
+## Setup
+
+### Create a virtual environment
+
+Navigate to the project directory and set up a virtual environment:
 
 ```
 cd rag-with-nyx
@@ -14,36 +18,38 @@ python -m venv .venv
 .venv\Script\activate # source .venv/bin/activate in Linux
 ```
 
-#### Install dependencies
+### Install dependencies
 
-Required dependencies:
+Add the required dependencies to `requirements.txt`:
+
 - nyx-client
 - openai
 - python-dotenv
 - loguru
+- pandas
 
 ```
 pip install -r requirements.txt
 ```
 
-#### Project structure 
+### Project structure 
 
 ```
 rag-with-nyx/
-├── .venv/  # Virtual environment (not committed to version control)
+├── .venv/  # Virtual environment
 ├── .env  # Nyx client configuration
 ├── requirements.txt  # Dependencies
 ├── README.md  # Project documentation
 └── chatbot.py  # Main chatbot script
 ```
 
-#### Logging
+### Configure Logging
 
-The chatbot.py file is
+Add logging to `chatbot.py`:
 
 ```python
 from loguru import logger
-import os
+import os, sys
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -55,11 +61,17 @@ logger.add(sys.stderr, level="ERROR") ## prints on console only errors
 logger.add("chatbot.log", rotation="1 MB", level="DEBUG")
 ```
 
-Run it and an empty log file is created `python chatbot.py`
+Run the script to create an empty log file:
 
-#### Nyx Client
+```bash
+python chatbot.py
+```
 
-Access to Nyx is configured by creating a `.env` file and setting the following variables
+## Configuring the Nyx Client
+
+### Setting Up Nyx Credentials
+
+Create a .env file and add the following variables:
 
 ```bash
 NYX_URL=<your Nyx instance endpoint>
@@ -67,55 +79,30 @@ NYX_EMAIL=<your Nyx email>
 NYX_PASSWORD=<your Nyx password>
 ```
 
-The chatbot then creates the Nyx client and tests the configuration:
+### Initializing the Nyx Client
+
+Add the following snippet to `chatbot.py`:
 
 ```python
-from loguru import logger
-import os
-from dotenv import load_dotenv
 from nyx_client import NyxClient
 
-# Load environment variables
-load_dotenv()
-
-# Initialize logging
-logger.remove() ## removes default handler that prints everything on console
-logger.add(sys.stderr, level="ERROR") ## prints on console only errors
-logger.add("chatbot.log", rotation="1 MB", level="DEBUG")
-
 nyx_client = NyxClient()
-logger.info("Nyx client initialized.")
-
-print(nyx_client.config)
+logger.info(f"Nyx client initialised; connected to Nyx at {nyx_client.config.nyx_url}")
 ```
 
-Running `python chatbot.py` produces a log message and the printout of the config in the `.env`
+Run the script to confirm the client initialization by checking the log file:
+```bash
+python chatbot.py
+```
 
-### Main loop
+## Main Chatbot Workflow
 
-The main loop of the chatbot is an infinite loop where the user is invited to type a question. If the user types `exit` the loop exits and chatbot terminates.
+### Main Loop
+
+The chatbot operates within an infinite loop, inviting the user to ask questions. The loop exits when the user types `exit`:
 
 ```python
-from loguru import logger
-import os, sys
-from dotenv import load_dotenv
-from nyx_client import NyxClient
-
-# Load environment variables
-load_dotenv()
-
-# Initialize logging
-logger.remove()
-logger.add(sys.stderr, level="ERROR") ## prints on console only errors
-logger.add("chatbot.log", rotation="1 MB", level="DEBUG")
-
-nyx_client = NyxClient()
-logger.info("Nyx client initialized.")
-
 def main():
-    """
-    Main function to handle user queries interactively.
-    """
     logger.info("Starting chatbot...")
     print("Welcome to the CSV Chatbot powered by Nyx!")
     print("Type 'exit' to quit.")
@@ -127,9 +114,10 @@ def main():
                 print("Goodbye!")
                 break
 
-            # Placeholder: Add keyword inference, search, and analysis here
             logger.debug(f"User query received: {user_query}")
-            print("Processing your query...")  # Placeholder for future steps
+            print("Processing your query...")  
+            
+            # Placeholder for further steps
 
         except KeyboardInterrupt:
             print("\nGoodbye!")
@@ -140,53 +128,37 @@ if __name__ == "__main__":
 
 ```
 
-### Inferring genre and categories from the user prompt
+## Inferring Genres and Categories
 
-We will use an OpenAI model to infer, from the user input, genre and categories to be used to search data in Nyx. Let's add the following to the chatbot.py
+### Integrating OpenAI for Inference
 
-#### Import openai library
+Import the OpenAI library and initialize it with your API key; add the following after the `load_dotenv()` call:
 
 ```python
 import openai
-import json
-```
 
-#### Initialize with Key
-
-After the `load_dotenv()`:
-
-```python
-# Initialize OpenAI API (requires OpenAI API key in the .env file)
+# Initialize OpenAI API
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     logger.error("OpenAI API key missing in .env file.")
     exit(1)
 
 openai.api_key = OPENAI_API_KEY
+
 ```
 
-#### New method to infer categories and genre via LLM query
+### Inferring Genres and Categories
+
+Define a function to infer genres and categories from the user query:
 
 ```python
+import json
 
-def infer_categories_and_genre(genres: list[str], categories: list[str], query: str, model: str = "gpt-4o-mini") -> dict:
-    """
-    Uses an openai model (default "gpt-4o-mini") to infer categories and genre from the user query.
-    
-    Args:
-        genres (list[str]): A list of genres to choose from
-        categories (list[str]): A list of categories to choose from
-        query (str): The user's free-text query.
-        model (str): The model (default "gpt-4o-mini").
-
-    Returns:
-        dict: A dictionary with inferred categories and genre.
-    """
+def infer_categories_and_genres(genres: list[str], categories: list[str], query: str, model: str = "gpt-4o-mini") -> dict:
     try:
         # Example prompt for gpt4o mini
-        prompt = f"""
-        
-        Extract zero or more categories and zero or one genre from the following query;
+        prompt = f"""        
+        Extract zero or more categories and zero or more genres from the following query;
         use the provided genres and categories only:
         Genres: [{genres}]
         Categories: [{categories}]
@@ -214,10 +186,10 @@ def infer_categories_and_genre(genres: list[str], categories: list[str], query: 
 
     except Exception as e:
         logger.error(f"Error during keyword inference: {e}")
-        return {"categories": [], "genre": None}
+        return {"categories": [], "genres": []}
 ```
 
-#### Integration in the main workflow
+### Integration in the main workflow
 
 Then the `main()` becomes
 
@@ -240,39 +212,28 @@ def main():
                 print("Goodbye!")
                 break
 
-            # Step 1: Infer categories and genre
-            inferred_keywords = infer_categories_and_genre(genres=genres, categories=categories, query=user_query)
+            inferred_keywords = infer_categories_and_genres(genres=genres, categories=categories, query=user_query)
             print(f"Inferred Categories: {inferred_keywords.get('categories')}")
             print(f"Inferred Genres: {inferred_keywords.get('genres')}")
             
-            # Placeholder: Add keyword inference, search, and analysis here
-            logger.debug(f"User query received: {user_query}")
-            print("Processing your query...")  # Placeholder for future steps
-
+            # Placeholder: search and analysis here
+            
         except KeyboardInterrupt:
             print("\nGoodbye!")
             break
 
 ```
 
-### Retrieving data with Nyx
+## Retrieving data with Nyx
 
-#### Searching Nyx for Matching Files
-Add a function to perform a search based on inferred categories and genre
+### Searching Nyx for DataLinks
+
+Search for files in Nyx based on inferred genres and categories:
 
 ```python
+from nyx_client import Data
+
 def search_nyx_for_files(client: NyxClient, categories: list[str], genres: list[str]) -> list[Data]:
-    """
-    Searches Nyx for files matching the given categories and genres.
-
-    Args:
-        client: The NyxClient instance.
-        categories (list[str]): List of inferred categories.
-        genres (list[str]): List of inferred genres.
-
-    Returns:
-        list: A list of resource IDs for matching files.
-    """
     try:
         logger.info(f"Searching Nyx for files with categories: {categories} and genres: {genres}")
 
@@ -304,22 +265,11 @@ def search_nyx_for_files(client: NyxClient, categories: list[str], genres: list[
         return []
 ```
 
-#### Subscribing to and Retrieving Files
-Add a function to subscribe to and download files
+### Downloading Files
+Retrieve and save the files locally:
 
 ```python
 def retrieve_csv_files(client: NyxClient, data: list[Data], download_path: str = "./data") -> list[str]:
-    """
-    Subscribes to and downloads CSV files from Nyx.
-
-    Args:
-        client: The NyxClient instance.
-        data (list[Data]): List of resource IDs to download.
-        download_path (str): The directory to save downloaded files.
-
-    Returns:
-        list: A list of paths to the downloaded CSV files.
-    """
     os.makedirs(download_path, exist_ok=True)  # Ensure download directory exists
     downloaded_files = []
 
@@ -331,7 +281,7 @@ def retrieve_csv_files(client: NyxClient, data: list[Data], download_path: str =
             # Download the file
             file_path = os.path.join(download_path, f"{d.name}")
             with open(file_path, "wb") as file:
-                file.write(d.as_string())
+                file.write(d.as_string().encode("utf-8"))
             logger.info(f"Downloaded file: {file_path}")
 
             downloaded_files.append(file_path)
@@ -341,32 +291,16 @@ def retrieve_csv_files(client: NyxClient, data: list[Data], download_path: str =
     return downloaded_files
 ```
 
-### Analysing the downloaded data
+## Analyzing Downloaded Data
 
-#### Add File Analysis Functionality
-We’ll use pandas to load and process CSV files, combined with GPT-4 for natural language analysis.
+### Loading and Analyzing CSVs
 
-Import `pandas`:
+Use pandas and OpenAI GPT for analysis:
 
 ```python
 import pandas as pd
-```
 
-add this file
-
-```python
-def analyze_csv_files(files: list[str], query: str, model: str = "gpt-4") -> str:
-    """
-    Analyze CSV files using GPT-4 to answer a specific query or summarize content.
-
-    Args:
-        files (list[str]): List of file paths to the downloaded CSVs.
-        query (str): The user's question or query.
-        model (str): The OpenAI model to use for analysis.
-
-    Returns:
-        str: The analysis result.
-    """
+def analyse_csv_files(files: list[str], query: str, model: str = "gpt-4") -> str:
     try:
         # Load CSV files into dataframes
         dataframes = []
@@ -422,7 +356,19 @@ def analyze_csv_files(files: list[str], query: str, model: str = "gpt-4") -> str
     
 ```
 
-change the `main()` flow
+## Final workflow
+
+The chatbot workflow is designed with two nested infinite loops for seamless interaction:
+
+1. Outer Loop: Capturing the Initial Query
+    - The chatbot begins by capturing the user’s initial query.
+    - This query is used to determine the genres and categories for retrieving relevant files from Nyx.
+    - If the query also includes an analysis request, the chatbot immediately processes it via the analysis function and provides a response before entering the second loop.
+2. Inner Loop: Follow-Up Analysis on Downloaded Data
+    - After the files are downloaded, the chatbot enters a second loop, allowing the user to:
+    - Ask additional questions about the already downloaded files.
+    - Refine or perform further analysis using the analysis function.
+    - The inner loop continues until the user types exit, at which point the chatbot exits the inner loop and returns to the outer loop for new queries.
 
 ```python
 def main():
@@ -476,7 +422,11 @@ def main():
                     continue
 
             # Step 5: Inner loop for analysis
-            print("\nYou can now ask specific questions about the downloaded files.")
+             # Automatically analyze the initial user query
+            print("\nInitial Analysis Result (based on your query):")
+            print(analyse_csv_files(downloaded_files, user_query))
+            
+            print("\nYou can now ask other specific questions about the downloaded files.")
             print("Type 'exit' to finish analyzing the files and return to the main menu.")
             
             while True:
@@ -494,6 +444,9 @@ def main():
         except KeyboardInterrupt:
             print("\nGoodbye!")
             break
+
+if __name__ == "__main__":
+    main()
 ```
 
 ## Enhancements for Future Development

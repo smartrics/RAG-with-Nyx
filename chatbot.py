@@ -1,6 +1,7 @@
-import os, sys
 import json
 import openai
+import os
+import sys
 import pandas as pd
 from loguru import logger
 from dotenv import load_dotenv
@@ -10,13 +11,6 @@ from nyx_client import NyxClient, Data
 # Load environment variables
 load_dotenv()
 
-# Initialise OpenAI API (requires OpenAI API key in the .env file)
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    logger.error("OpenAI API key missing in .env file.")
-    exit(1)
-
-openai.api_key = OPENAI_API_KEY
 
 # Initialise logging
 logger.remove()
@@ -24,8 +18,15 @@ logger.add(sys.stderr, level="ERROR") ## prints on console only errors
 logger.add("chatbot.log", rotation="1 MB", level="DEBUG")
 
 nyx_client = NyxClient()
-logger.info("Nyx client initialised.")
+logger.info(f"Nyx client initialised; connected to Nyx at {nyx_client.config.nyx_url}")
 
+# Initialise OpenAI API (requires OpenAI API key in the .env file)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    logger.error("OpenAI API key missing in .env file.")
+    exit(1)
+
+openai.api_key = OPENAI_API_KEY
 def infer_categories_and_genres(genres: list[str], categories: list[str], query: str, model: str = "gpt-4") -> dict:
     """
     Uses an OpenAI model to infer categories and genres from the user query.
@@ -42,7 +43,7 @@ def infer_categories_and_genres(genres: list[str], categories: list[str], query:
     try:
         # Example prompt for gpt-4
         prompt = f"""
-        Extract zero or more categories and zero or more genres from the following query:
+        Extract zero or more categories and zero or more genres from the following query;
         Use only the provided genres and categories.
         Genres: {genres}
         Categories: {categories}
