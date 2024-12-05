@@ -2,13 +2,6 @@
 
 This repository contains a series of complete examples showcasing the powerful mechanics that [Nyx](NYX.md) offers for data retrieval in Retrieval-Augmented Generation (RAG) applications. These examples demonstrate how Nyx enables sophisticated retrieval capabilities to underpin and enhance RAG workflows.
 
-These examples in this repository focus on the ability of Nyx to provide a solid and sophisticated retrieve capability that underpins RAG applications.
-
-[Simple RAG](simple-rag/) shows a basic Chatbot application with a naive implementation of a retrieval method based on identifying 
-
-[Advanced RAG](advanced-rag/) shows how to improve the retrieval ability of the RAG chatbot using advanced search/discovery of Nyx. It also provides a human-in-the-loop phase where users validate the retrieved documents
-
-
 ## Examples in This Repository
 
 ### Simple RAG
