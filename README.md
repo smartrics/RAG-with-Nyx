@@ -55,7 +55,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Initialize logging
+# Initialise logging
 logger.remove()
 logger.add(sys.stderr, level="ERROR") ## prints on console only errors
 logger.add("chatbot.log", rotation="1 MB", level="DEBUG")
@@ -132,12 +132,12 @@ if __name__ == "__main__":
 
 ### Integrating OpenAI for Inference
 
-Import the OpenAI library and initialize it with your API key; add the following after the `load_dotenv()` call:
+Import the OpenAI library and initialise it with your API key; add the following after the `load_dotenv()` call:
 
 ```python
 import openai
 
-# Initialize OpenAI API
+# Initialise OpenAI API
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     logger.error("OpenAI API key missing in .env file.")
@@ -422,7 +422,7 @@ def main():
                     continue
 
             # Step 5: Inner loop for analysis
-             # Automatically analyze the initial user query
+             # Automatically analyse the initial user query
             print("\nInitial Analysis Result (based on your query):")
             print(analyse_csv_files(downloaded_files, user_query))
             
@@ -499,7 +499,7 @@ To improve reliability and user trust, the chatbot can incorporate human validat
 ### Enhanced Validation to Prevent Vulnerabilities
 Stronger validation mechanisms should be implemented to safeguard against issues like invalid inputs, prompt injection, or unintended responses:
 
-- **Input Sanitization**: Validate and sanitize user inputs to prevent harmful or malformed data from influencing the chatbot's behavior.
+- **Input Sanitisation**: Validate and sanitise user inputs to prevent harmful or malformed data from influencing the chatbot's behavior.
 - **Prompt Validation**: Apply rigorous validation to ensure generated prompts and responses align with predefined rules and constraints.
 - **Test Coverage**: Implement unit tests for critical functions, including SPARQL generation, file retrieval, and prompt construction, to catch potential issues early.
 
