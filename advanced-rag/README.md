@@ -226,7 +226,7 @@ This query finds all datalinks whose metadata matches any combination of the spe
 ### Refactoring `_search_nyx_for_files` to Use SPARQL
 We can now refactor the Retriever class’s _search_nyx_for_files function to leverage SPARQL for genre and category-based retrieval.
 
-Updated `_search_nyx_for_files`:
+Updated `_search_nyx_for_files` (we're omitting the `_parse_data()` function for brevity):
 
 ```python
     def _search_nyx_for_files(self, categories: list[str], genres: list[str]) -> list[Data]:
