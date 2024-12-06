@@ -1,5 +1,6 @@
 import openai
 import json
+import csv
 from nyx_client import NyxClient, Data
 from nyx_client.client import SparqlResultType
 from loguru import logger
@@ -103,7 +104,7 @@ class Retriever:
             }}
             """
             s = self._nyx_client.sparql_query(query=sparql_query, local_only=True, result_type=SparqlResultType.SPARQL_CSV)
-            results: Data = self.parse_data(s)
+            results: Data = self._parse_data(s)
             logger.debug(f"Found search results: #{len(results)}")
             print(f"Found {len(results)} results:" )
             for u in results:
@@ -117,14 +118,16 @@ class Retriever:
             return []
         
         
-    def parse_data(self, raw_data: str) -> list[Data]:
+    def _parse_data(self, raw_data: str) -> list[Data]:
         temp_data_map = {}
         org = self._nyx_client.org
-        for line in raw_data.strip().split("\n"):
-            subject, predicate, obj = line.split(",", 2)
-            subject = subject.strip()
-            predicate = predicate.strip()
-            obj = obj.strip().strip('"')
+        # Read CSV data
+        csv_reader = csv.reader(raw_data.strip().split("\n"))
+        next(csv_reader) # Excludes the header
+        for row in csv_reader:
+            if len(row) < 3:
+                continue  # Skip malformed rows
+            subject, predicate, obj = row[0].strip(), row[1].strip(), row[2].strip()
 
             # Initialize a temporary dictionary for the subject if not already present
             if subject not in temp_data_map:
@@ -157,12 +160,9 @@ class Retriever:
             elif predicate == "http://www.w3.org/ns/dcat#byteSize":
                 temp_data_map[subject]["size"] = int(obj)
             elif predicate == "http://www.w3.org/ns/dcat#accessURL":
-                temp_data_map[subject]["url"] = obj + f"?buyer_org={org}"
+                temp_data_map[subject]["url"] = obj
             elif predicate == "http://www.w3.org/ns/dcat#mediaType":
                 temp_data_map[subject]["content_type"] = obj
-                if obj.startswith("http"):
-                    temp_data_map[subject]["content_type"] = obj.split("/")[-1]
-
 
         # Construct immutable Data objects
         data_objects = [
@@ -177,9 +177,8 @@ class Retriever:
                 categories=data["categories"],
                 genre=data["genre"],
                 size=data["size"],
-                custom_metadata=[],
-                connection_id=None
             )
             for data in temp_data_map.values()
         ]
+
         return data_objects

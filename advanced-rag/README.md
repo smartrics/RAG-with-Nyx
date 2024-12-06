@@ -226,4 +226,41 @@ This query finds all datalinks whose metadata matches any combination of the spe
 ### Refactoring `_search_nyx_for_files` to Use SPARQL
 We can now refactor the Retriever class’s _search_nyx_for_files function to leverage SPARQL for genre and category-based retrieval.
 
-Updated _search_nyx_for_files
+Updated `_search_nyx_for_files`:
+
+```python
+    def _search_nyx_for_files(self, categories: list[str], genres: list[str]) -> list[Data]:
+        try:
+            logger.info(f"Searching Nyx for files with categories: {categories} and genres: {genres}")
+
+            # We search for every combination of genre and categories    
+                    
+            category_filter = "FILTER(?theme IN (" + ", ".join(f'"{cat}"' for cat in categories) + "))"
+            genre_filter = "FILTER(?type IN (" + ", ".join(f'"{gen}"' for gen in genres) + "))"
+
+            # Combine the SPARQL query
+            sparql_query = f"""
+            SELECT DISTINCT ?subject ?predicate ?object
+            WHERE {{
+                ?subject ?predicate ?object .
+                ?subject <http://www.w3.org/ns/dcat#theme> ?theme .
+                ?subject <http://purl.org/dc/terms/type> ?type .
+                {category_filter}
+                {genre_filter}
+            }}
+            """
+            s = self._nyx_client.sparql_query(query=sparql_query, local_only=True, result_type=SparqlResultType.SPARQL_CSV)
+            results: Data = self._parse_data(s)
+            logger.debug(f"Found search results: #{len(results)}")
+            print(f"Found {len(results)} results:" )
+            for u in results:
+                u: Data = u
+                print(f"'{u.title}' created by '{u.creator}', size={u.size}b: {u.description[:50]}...")
+
+            return results
+
+        except Exception as e:
+            logger.error(f"Error during Nyx search: {e}")
+            return []
+
+```
