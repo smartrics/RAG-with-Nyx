@@ -1,12 +1,3 @@
-# Advanced RAG with Nyx
-
-This tutorial builds over the Simple example; the focus is to build a more sophisticated retrieval of datalinks from Nyx in order to access data that is required to fulfill the user's question.
-
-Before starting with the tutorial itself a change has been implemented in the chatbot to abstract the retrieval phase into a separate class called Retriever. The retriever is then be injected in the main pipeline
-
-The Simple RAG chatbot retrieve consists of two steps: infer genres and categories from the user query, fetch all datalinks in Nyx matching at least a genre and a category among those inferred. This workflow has now been refactored in the retriever class as following
-
-```python
 import openai
 import json
 from nyx_client import NyxClient, Data
@@ -34,6 +25,18 @@ class Retriever:
 
         
     def _infer_categories_and_genres(self, query: str) -> dict:
+        """
+        Uses an OpenAI model to infer categories and genres from the user query.
+        
+        Args:
+            genres (list[str]): A list of genres to choose from.
+            categories (list[str]): A list of categories to choose from.
+            query (str): The user's free-text query.
+            model (str): The model (default "gpt-4").
+
+        Returns:
+            dict: A dictionary with inferred categories and a genres.
+        """
         try:
             # Example prompt for gpt-4
             prompt = f"""
@@ -111,38 +114,4 @@ class Retriever:
         except Exception as e:
             logger.error(f"Error during Nyx search: {e}")
             return []
-```
-
-and then plugged in the main workflow as
-
-```python
-def main():
-
-    ## initialisation
-
-    while True:
-        try:
-            if not downloaded_files:
-                # Step 1: Get a new query
-                ## cut ...
-
-                print("Processing your query...")
-
-                matching_files = retriever.retrieve(query=user_query)
-
-                if not matching_files:
-                    print("No matching files found.")
-                    continue
-
-                # Step 4: Retrieve CSV files
-                downloaded_files = retrieve_csv_files(client=nyx_client, data=matching_files)
-
-
-            # Step 5: Inner loop for analysis
-            ## ...
-
-        # ...        
         
-if __name__ == "__main__":
-    main()
-```
