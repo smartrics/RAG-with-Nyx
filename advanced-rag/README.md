@@ -35,7 +35,6 @@ class Retriever:
         
     def _infer_categories_and_genres(self, query: str) -> dict:
         try:
-            # Example prompt for gpt-4
             prompt = f"""
             Extract zero or more categories and zero or more genres from the following query;
             Use only the provided genres and categories.

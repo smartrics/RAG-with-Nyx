@@ -156,7 +156,6 @@ import json
 
 def infer_categories_and_genres(genres: list[str], categories: list[str], query: str, model: str = "gpt-4o-mini") -> dict:
     try:
-        # Example prompt for gpt4o mini
         prompt = f"""        
         Extract zero or more categories and zero or more genres from the following query;
         use the provided genres and categories only:
