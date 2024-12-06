@@ -157,3 +157,73 @@ if __name__ == "__main__":
     main()
 ```
 
+
+## Querying the Nyx catalog
+
+In this section, we enhance the Retriever by leveraging SPARQL for querying the Nyx catalog. SPARQL allows for precise and metadata-driven retrieval of datalinks, making it a perfect fit for building advanced RAG applications.
+
+### Using SPARQL for querying
+
+The Nyx SDK provides an interface to execute SPARQL queries using the sparql method:
+
+```python
+s:str = NyxClient().sparql(query="...", local_only=True|False, result_type=...)
+```
+
+Parameters:
+- query: A SPARQL query string.
+- local_only: A Boolean indicating whether the query should run only on the local Nyx instance (True) or be federated across the Nyx network (False).
+- result_type: The format of the result, which can be set using the SparqlResultType enum (e.g., SPARQL_CSV, SPARQL_JSON, etc.).
+
+#### Example: Querying Metadata for a Dataset
+The following example demonstrates how to retrieve metadata for a specific dataset:
+
+```python
+from nyx_client import NyxClient
+from nyx_client.client import SparqlResultType
+
+nyx = NyxClient()
+
+query = """SELECT ?subject ?predicate ?object
+WHERE {
+  ?subject <http://data.iotics.com/pnyx#productName> "simulated-erp-it-dataset-full.csv" .
+  ?subject ?predicate ?object .
+}
+"""
+
+result = nyx.sparql(query=query, local_only=True, result_type=SparqlResultType.SPARQL_CSV)
+print(result)
+```
+
+This query fetches all metadata associated with the dataset named simulated-erp-it-dataset-full.csv. The result is returned as a CSV file, formatted as:
+
+```csv
+subject,predicate,object
+did:iotics:iotKbQEZMrFNfkfmLc47GtiR9a3GuZi7MB2L,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,http://www.w3.org/ns/dcat#Dataset
+did:iotics:iotKbQEZMrFNfkfmLc47GtiR9a3GuZi7MB2L,http://data.iotics.com/iotics#updatedAt,2024-09-20T11:57:33.669+00:00
+did:iotics:iotKbQEZMrFNfkfmLc47GtiR9a3GuZi7MB2L,http://purl.org/dc/terms/title,IT Asset Lifecycle and Performance Data (2015-2024)
+...
+```
+
+### Retrieving DataLinks by genre and categories
+
+Retrieving DataLinks by Genre and Categories
+SPARQL Query for Genres and Categories
+To retrieve all datalinks matching inferred Genres `("t1", "t2", "t3")` and Categories `("h1", "h2", "h3")`, the SPARQL query would look like this:
+
+```sql
+SELECT DISTINCT ?subject ?predicate ?object
+WHERE {
+  ?subject ?predicate ?object .
+  ?subject <http://purl.org/dc/terms/type> ?type .
+  ?subject <http://www.w3.org/ns/dcat#theme> ?theme .
+  FILTER(?type IN ("t1", "t2", "t3"))  
+  FILTER(?theme IN ("h1", "h2", "h3")) 
+}
+```
+This query finds all datalinks whose metadata matches any combination of the specified genres (`type`) and categories (`theme`).
+
+### Refactoring `_search_nyx_for_files` to Use SPARQL
+We can now refactor the Retriever class’s _search_nyx_for_files function to leverage SPARQL for genre and category-based retrieval.
+
+Updated _search_nyx_for_files

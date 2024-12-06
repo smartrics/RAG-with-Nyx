@@ -1,6 +1,7 @@
 import openai
 import json
 from nyx_client import NyxClient, Data
+from nyx_client.client import SparqlResultType
 from loguru import logger
 
 class Retriever:
@@ -85,32 +86,100 @@ class Retriever:
         try:
             logger.info(f"Searching Nyx for files with categories: {categories} and genres: {genres}")
 
-            # We search for every combination of genre and categories
-            results: Data = []
-            for c in categories:
-                for g in genres:
-                    r = self._nyx_client.get_data(categories=[c], genre=g, content_type="text/csv")
-                    results.extend(r)
-            
-            # Remove duplicates
-            seen = set()
-            unique_results = []  
-            for data in results:
-                data: Data = data
-                key = (data.name, data.creator)  
-                if key not in seen:
-                    seen.add(key)
-                    unique_results.append(data)
-                            
-            logger.debug(f"Found search results: #{len(unique_results)}")
-            print(f"Found {len(unique_results)} results:" )
-            for u in unique_results:
+            # We search for every combination of genre and categories    
+                    
+            category_filter = "FILTER(?theme IN (" + ", ".join(f'"{cat}"' for cat in categories) + "))"
+            genre_filter = "FILTER(?type IN (" + ", ".join(f'"{gen}"' for gen in genres) + "))"
+
+            # Combine the SPARQL query
+            sparql_query = f"""
+            SELECT DISTINCT ?subject ?predicate ?object
+            WHERE {{
+                ?subject ?predicate ?object .
+                ?subject <http://www.w3.org/ns/dcat#theme> ?theme .
+                ?subject <http://purl.org/dc/terms/type> ?type .
+                {category_filter}
+                {genre_filter}
+            }}
+            """
+            s = self._nyx_client.sparql_query(query=sparql_query, local_only=True, result_type=SparqlResultType.SPARQL_CSV)
+            results: Data = self.parse_data(s)
+            logger.debug(f"Found search results: #{len(results)}")
+            print(f"Found {len(results)} results:" )
+            for u in results:
                 u: Data = u
                 print(f"'{u.title}' created by '{u.creator}', size={u.size}b: {u.description[:50]}...")
 
-            return unique_results
+            return results
 
         except Exception as e:
             logger.error(f"Error during Nyx search: {e}")
             return []
         
+        
+    def parse_data(self, raw_data: str) -> list[Data]:
+        temp_data_map = {}
+        org = self._nyx_client.org
+        for line in raw_data.strip().split("\n"):
+            subject, predicate, obj = line.split(",", 2)
+            subject = subject.strip()
+            predicate = predicate.strip()
+            obj = obj.strip().strip('"')
+
+            # Initialize a temporary dictionary for the subject if not already present
+            if subject not in temp_data_map:
+                temp_data_map[subject] = {
+                    "name": "",
+                    "title": "",
+                    "description": "",
+                    "org": org,
+                    "url": "",
+                    "content_type": "",
+                    "creator": "",
+                    "categories": [],
+                    "genre": "",
+                    "size": 0,
+                }
+
+            # Map predicates to temporary dictionary fields
+            if predicate == "http://data.iotics.com/pnyx#productName":
+                temp_data_map[subject]["name"] = obj
+            elif predicate == "http://purl.org/dc/terms/title":
+                temp_data_map[subject]["title"] = obj
+            elif predicate == "http://purl.org/dc/terms/description":
+                temp_data_map[subject]["description"] = obj
+            elif predicate == "http://purl.org/dc/terms/creator":
+                temp_data_map[subject]["creator"] = obj
+            elif predicate == "http://www.w3.org/ns/dcat#theme":
+                temp_data_map[subject]["categories"].append(obj)
+            elif predicate == "http://purl.org/dc/terms/type":
+                temp_data_map[subject]["genre"] = obj
+            elif predicate == "http://www.w3.org/ns/dcat#byteSize":
+                temp_data_map[subject]["size"] = int(obj)
+            elif predicate == "http://www.w3.org/ns/dcat#accessURL":
+                temp_data_map[subject]["url"] = obj + f"?buyer_org={org}"
+            elif predicate == "http://www.w3.org/ns/dcat#mediaType":
+                temp_data_map[subject]["content_type"] = obj
+                if obj.startswith("http"):
+                    temp_data_map[subject]["content_type"] = obj.split("/")[-1]
+
+
+        # Construct immutable Data objects
+        data_objects = [
+            Data(
+                name=data["name"],
+                title=data["title"],
+                description=data["description"],
+                org=data["org"],
+                url=data["url"],
+                content_type=data["content_type"],
+                creator=data["creator"],
+                categories=data["categories"],
+                genre=data["genre"],
+                size=data["size"],
+                custom_metadata=[],
+                connection_id=None
+            )
+            for data in temp_data_map.values()
+        ]
+        return data_objects
