@@ -1,10 +1,18 @@
 # Advanced RAG with Nyx
 
-This tutorial builds over the Simple example; the focus is to build a more sophisticated retrieval of datalinks from Nyx in order to access data that is required to fulfill the user's question.
+This tutorial builds on the Simple RAG Chatbot example and introduces a more sophisticated approach to data retrieval using Nyx. The focus is on enhancing the chatbot’s ability to retrieve datalinks from Nyx that are specifically tailored to answer the user’s query.
 
-Before starting with the tutorial itself a change has been implemented in the chatbot to abstract the retrieval phase into a separate class called Retriever. The retriever is then be injected in the main pipeline
+Before diving into the advanced retrieval techniques, a change has been made to the chatbot code: the retrieval logic has been abstracted into a dedicated Retriever class. This abstraction allows for a more modular code, making it easier to discuss how to extend the retrieval capabilities.
 
-The Simple RAG chatbot retrieve consists of two steps: infer genres and categories from the user query, fetch all datalinks in Nyx matching at least a genre and a category among those inferred. This workflow has now been refactored in the retriever class as following
+## Enhancements to the Simple RAG Chatbot
+
+### Abstracting Retrieval into a Retriever Class
+In the original Simple RAG example, the retrieval process consisted of:
+
+- Inferring genres and categories from the user query.
+- Fetching all datalinks in Nyx that match any inferred genre and category.
+
+This workflow has now been refactored into a Retriever class:
 
 ```python
 import openai
@@ -112,7 +120,10 @@ class Retriever:
             return []
 ```
 
-and then plugged in the main workflow as
+### Integrating the Retriever into the Chatbot
+
+The Retriever is then injected into the main chatbot workflow. The chatbot uses it to handle all retrieval-related logic, simplifying the main workflow.
+Here’s how the chatbot integrates the Retriever:
 
 ```python
 def main():
@@ -145,3 +156,4 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
