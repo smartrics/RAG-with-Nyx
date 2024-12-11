@@ -43,12 +43,32 @@ def infer_categories_and_genres(genres: list[str], categories: list[str], query:
     try:
         # Example prompt for gpt-4
         prompt = f"""
-        Extract zero or more categories and zero or more genres from the following query;
-        Use only the provided genres and categories.
-        Genres: {genres}
-        Categories: {categories}
-        Query: "{query}"
-        Provide the response in JSON format with 'categories' and 'genres' as keys.
+            As an expert data modeller, extract zero or more categories and zero or more genres from the following query.  
+            Genres represent the type or subject matter of datasets (e.g., sales, climate, demographics).  
+            Categories represent specific topics or domains the data applies to (e.g., healthcare, finance, education).  
+            Use only the provided genres and categories below to map the query to categories and genres.  
+            Don't expect categories and genres to be explicitly specified in the query but use your ability to infer what they are.  
+            If the query includes ambiguous terms or mappings to multiple possible genres or categories, include all plausible options and explain the reasoning behind them.  
+            If the query includes contextual filters (e.g., temporal or spatial constraints), note whether these filters influence the inferred genres or categories.  
+
+            Provide an explanation of the thinking process used to determine the results.  
+            
+            Examples:  
+                Query: "Find datasets about sales in Europe for the last 5 years."  
+                Genres: ["sales"]  
+                Categories: ["finance"]  
+                Explanation: "The query explicitly mentions sales, which maps directly to the 'sales' genre. The reference to Europe and the time frame are not specific categories, but 'finance' is inferred based on sales."  
+
+                Query: "Datasets about healthcare in Asia."  
+                Genres: ["demographics"]  
+                Categories: ["healthcare"]  
+                Explanation: "The query explicitly mentions healthcare, which maps to the 'healthcare' category. 'Demographics' is inferred as the genre because healthcare data often relates to population demographics."  
+                
+            Genres: {genres}  
+            Categories: {categories}  
+            Query: "{query}"  
+            
+            Provide the response in JSON format with 'explanation', 'categories' and 'genres' as keys.  
         """
 
         logger.debug(f"Sending query to GPT: {query}")
@@ -66,7 +86,7 @@ def infer_categories_and_genres(genres: list[str], categories: list[str], query:
         logger.debug(f"Raw response from GPT: {result}")
         
         # Convert result to a dictionary
-        inferred_data = json.loads(result)  # Use a safer JSON parsing method in production
+        inferred_data = json.loads(result)
         logger.info(f"Inferred keywords: {inferred_data}")
         return inferred_data
 
