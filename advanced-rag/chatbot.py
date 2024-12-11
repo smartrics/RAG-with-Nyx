@@ -102,8 +102,9 @@ def analyse_csv_files(files: list[str], query: str, model: str = "gpt-4") -> str
 
         User query: "{query}"
 
-        If the query is specific, answer it based on the data. If the query is generic or not a question,
-        provide a summary of the data.
+        If the query is specific, answer it based on the data. 
+        If the query is generic or not a question, provide a simple explanation of this, saying that no analysis took place.
+        Write the query as if you were chatting to the user.
         """
 
         logger.debug(f"Sending analysis query to GPT: {query}")
