@@ -34,7 +34,7 @@ class Retriever:
         inferred_categories = inferred_keywords.get('categories')
         inferred_genres = inferred_keywords.get('genres')
         # Step 3: Search Nyx for matching files
-        matching_files = self._search_nyx_for_files(
+        matching_files = self._search_nyx(
             categories=inferred_categories,
             genres=inferred_genres,
         )
@@ -75,7 +75,7 @@ class Retriever:
             logger.error(f"Error during keyword inference: {e}")
             return {"categories": [], "genres": []}
 
-    def _search_nyx_for_files(self, categories: list[str], genres: list[str]) -> list[Data]:
+    def _search_nyx(self, categories: list[str], genres: list[str]) -> list[Data]:
         """
         Searches Nyx for files matching the given categories and genres.
 
@@ -223,13 +223,13 @@ WHERE {
 ```
 This query finds all datalinks whose metadata matches any combination of the specified genres (`type`) and categories (`theme`).
 
-### Refactoring `_search_nyx_for_files` to Use SPARQL
-We can now refactor the Retriever class’s _search_nyx_for_files function to leverage SPARQL for genre and category-based retrieval.
+### Refactoring `_search_nyx` to Use SPARQL
+We can now refactor the Retriever class’s `_search_nyx` function to leverage SPARQL for genre and category-based retrieval.
 
-Updated `_search_nyx_for_files` (we're omitting the `_parse_data()` function for brevity):
+The updated `_search_nyx` is (we're omitting the `_parse_data()` function for brevity):
 
 ```python
-    def _search_nyx_for_files(self, categories: list[str], genres: list[str]) -> list[Data]:
+    def _search_nyx(self, categories: list[str], genres: list[str]) -> list[Data]:
         try:
             logger.info(f"Searching Nyx for files with categories: {categories} and genres: {genres}")
 

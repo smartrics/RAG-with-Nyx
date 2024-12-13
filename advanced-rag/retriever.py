@@ -19,7 +19,7 @@ class Retriever:
         inferred_categories = inferred_keywords.get('categories')
         inferred_genres = inferred_keywords.get('genres')
         # Step 3: Search Nyx for matching files
-        matching_files = self._search_nyx_for_files(
+        matching_files = self._search_nyx(
             categories=inferred_categories,
             genres=inferred_genres,
         )
@@ -92,7 +92,7 @@ class Retriever:
             logger.error(f"Error during keyword inference: {e}")
             return {"categories": [], "genres": []}
 
-    def _search_nyx_for_files(self, categories: list[str], genres: list[str]) -> list[Data]:
+    def _search_nyx(self, categories: list[str], genres: list[str]) -> list[Data]:
         """
         Searches Nyx for files matching the given categories and genres.
 
