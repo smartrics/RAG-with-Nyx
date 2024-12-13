@@ -94,7 +94,7 @@ def analyse_csv_files(files: list[str], query: str, model: str = "gpt-4") -> str
 
         # Construct the GPT-4 prompt
         prompt = f"""
-        You are analyzing CSV data. Here is a sample of the data:
+        You are analysing CSV data. Here is a sample of the data:
         {csv_preview}
 
         Summary statistics of the data:
@@ -165,12 +165,12 @@ def main():
                     continue
 
             # Step 5: Inner loop for analysis
-             # Automatically analyze the initial user query
+             # Automatically analyse the initial user query
             print("\nInitial Analysis Result (based on your query):")
             print(analyse_csv_files(downloaded_files, user_query))
             
             print("\nYou can now ask other specific questions about the downloaded files.")
-            print("Type 'exit' to finish analyzing the files and return to the main menu.")
+            print("Type 'exit' to finish analysing the files and return to the main menu.")
             
             while True:
                 analysis_query = input("\nEnter your question about the files: ").strip()
