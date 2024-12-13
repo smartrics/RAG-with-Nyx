@@ -79,7 +79,7 @@ NYX_EMAIL=<your Nyx email>
 NYX_PASSWORD=<your Nyx password>
 ```
 
-### Initializing the Nyx Client
+### Initialising the Nyx Client
 
 Add the following snippet to `chatbot.py`:
 
@@ -90,7 +90,7 @@ nyx_client = NyxClient()
 logger.info(f"Nyx client initialised; connected to Nyx at {nyx_client.config.nyx_url}")
 ```
 
-Run the script to confirm the client initialization by checking the log file:
+Run the script to confirm the client initialisation by checking the log file:
 ```bash
 python chatbot.py
 ```
@@ -310,9 +310,9 @@ def retrieve_csv_files(client: NyxClient, data: list[Data], download_path: str =
     return downloaded_files
 ```
 
-## Analyzing Downloaded Data
+## Analysing Downloaded Data
 
-### Loading and Analyzing CSVs
+### Loading and Analysing CSVs
 
 Use pandas and OpenAI GPT for analysis:
 
@@ -342,7 +342,7 @@ def analyse_csv_files(files: list[str], query: str, model: str = "gpt-4") -> str
 
         # Construct the GPT-4 prompt
         prompt = f"""
-        You are analyzing CSV data. Here is a sample of the data:
+        You are analysing CSV data. Here is a sample of the data:
         {csv_preview}
 
         Summary statistics of the data:
@@ -446,7 +446,7 @@ def main():
             print(analyse_csv_files(downloaded_files, user_query))
             
             print("\nYou can now ask other specific questions about the downloaded files.")
-            print("Type 'exit' to finish analyzing the files and return to the main menu.")
+            print("Type 'exit' to finish analysing the files and return to the main menu.")
             
             while True:
                 analysis_query = input("\nEnter your question about the files: ").strip()

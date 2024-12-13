@@ -94,9 +94,9 @@ def infer_categories_and_genres(genres: list[str], categories: list[str], query:
         logger.error(f"Error during keyword inference: {e}")
         return {"categories": [], "genres": []}
 
-def search_nyx_for_files(client: NyxClient, categories: list[str], genres: list[str]) -> list[Data]:
+def search_nyx(client: NyxClient, categories: list[str], genres: list[str]) -> list[Data]:
     """
-    Searches Nyx for files matching the given categories and genres.
+    Searches Nyx for datalinks matching the given categories and genres.
 
     Args:
         client: The NyxClient instance.
@@ -104,10 +104,10 @@ def search_nyx_for_files(client: NyxClient, categories: list[str], genres: list[
         genres (list[str]): List of inferred genres.
 
     Returns:
-        list: A list of resource IDs for matching files.
+        list: A list of resource IDs for matching datalinks.
     """
     try:
-        logger.info(f"Searching Nyx for files with categories: {categories} and genres: {genres}")
+        logger.info(f"Searching Nyx for datalinks with categories: {categories} and genres: {genres}")
 
         # We search for every combination of genre and categories
         results: Data = []
@@ -202,7 +202,7 @@ def analyse_csv_files(files: list[str], query: str, model: str = "gpt-4") -> str
 
         # Construct the GPT-4 prompt
         prompt = f"""
-        You are analyzing CSV data. Here is a sample of the data:
+        You are analysing CSV data. Here is a sample of the data:
         {csv_preview}
 
         Summary statistics of the data:
@@ -264,18 +264,18 @@ def main():
                 print(f"Matched genres: {inferred_genres}, categories: {inferred_categories}")
 
                 # Step 3: Search Nyx for matching files
-                matching_files = search_nyx_for_files(
+                matching_datalinks = search_nyx(
                     client=nyx_client,
                     categories=inferred_categories,
                     genres=inferred_genres,
                 )
 
-                if not matching_files:
+                if not matching_datalinks:
                     print("No matching files found.")
                     continue
 
                 # Step 4: Retrieve CSV files
-                downloaded_files = retrieve_csv_files(client=nyx_client, data=matching_files)
+                downloaded_files = retrieve_csv_files(client=nyx_client, data=matching_datalinks)
 
                 if downloaded_files:
                     print(f"Downloaded files: {downloaded_files}")
@@ -284,15 +284,15 @@ def main():
                     continue
 
             # Step 5: Inner loop for analysis
-             # Automatically analyze the initial user query
+             # Automatically analyse the initial user query
             print("\nInitial Analysis Result (based on your query):")
             print(analyse_csv_files(downloaded_files, user_query))
             
             print("\nYou can now ask other specific questions about the downloaded files.")
-            print("Type 'exit' to finish analyzing the files and return to the main menu.")
+            print("Type 'exit' to finish analysing the files and return to the main menu.")
             
             while True:
-                analysis_query = input("\nEnter your question about the files: ").strip()
+                analysis_query = input("\nEnter your question about the retrieved content: ").strip()
                 if analysis_query.lower() == 'exit':
                     print("Returning to the main menu...")
                     downloaded_files = []  # Clear the files for a fresh query

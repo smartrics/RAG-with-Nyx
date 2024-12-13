@@ -4,15 +4,15 @@
 
 ## Key Features of Nyx
 
-1. Decentralized Exchange
-    - Nyx operates on a **decentralized architecture**, ensuring **data sovereignty**. This allows organizations to retain full control over their data while benefiting from shared ecosystems.
+1. Decentralised Exchange
+    - Nyx operates on a **decentralised architecture**, ensuring **data sovereignty**. This allows organisations to retain full control over their data while benefiting from shared ecosystems.
     - The Exchange acts as a **trusted-less** layer for **connecting data producers and consumers** securely and efficiently.
 2. Built for AI Workflows
     - Nyx provides the foundational infrastructure to support **AI workflows**, enabling seamless integration of domain-specific knowledge into AI applications.
     - It enhances **contextual understanding** by retrieving and curating the most relevant and trusted datasets, empowering AI models with better insights.
 3. Formal Semantic Metadata
     - Nyx employs **formal semantics** (ontologies) to model metadata, enriching datasets and enabling powerful retrieval and context delivery for AI applications:
-    - **Metadata** is machine-readable, standardized, and aligned with semantic web technologies, improving interoperability across domains.
+    - **Metadata** is machine-readable, standardised, and aligned with semantic web technologies, improving interoperability across domains.
     - Advanced semantic annotations support:
         - **Enhanced discovery**: By leveraging deep relationships and attributes rather than simple keywords, Nyx enables sophisticated queries to identify relevant datasets.
         - **Contextual enrichment**: Enriched metadata provides additional context to AI workflows, ensuring alignment with specific use cases, improving accuracy, and reducing errors.

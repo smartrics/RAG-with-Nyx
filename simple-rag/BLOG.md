@@ -5,15 +5,15 @@ Retrieval-Augmented Generation (RAG) is a powerful way to combine external data 
 We’ll focus on three key aspects:
 
 - Outer and Inner Loops: Structuring the chatbot for dynamic queries and iterative analysis.
-- Nyx Data Retrieval: Using inferred metadata to fetch files relevant to the user’s query.
-- LLM Integration: Leveraging OpenAI models to answer specific questions or summarize data.
+- Nyx Data Retrieval: Using inferred metadata to fetch datalinks relevant to the user’s query.
+- LLM Integration: Leveraging OpenAI models to answer specific questions or summarise data.
 
 ## Overview of the Chatbot
 
 The chatbot:
-- Accepts a user query and determines the Genre and Categories of files needed.
-- Fetches the relevant files from Nyx based on the inferred metadata.
-- Analyzes the retrieved files using an LLM to answer the query.
+- Accepts a user query and determines the Genre and Categories of datalinks needed.
+- Fetches the relevant datalinks from Nyx based on the inferred metadata.
+- Analyses the retrieved datalinks using an LLM to answer the query.
 - Enters an inner loop where users can ask additional questions about the data.
 
 This setup ensures an interactive experience, allowing the chatbot to provide contextual answers iteratively.
@@ -41,18 +41,18 @@ def main():
         # Infer genres and categories
         inferred = infer_categories_and_genre(genres, categories, user_query)
 
-        # Retrieve matching files
-        matching_files = search_nyx_for_files(nyx_client, inferred['categories'], inferred['genres'])
-        if not matching_files:
-            print("No matching files found.")
+        # Retrieve matching datalinks
+        matching_datalinks = search_nyx_for_files(nyx_client, inferred['categories'], inferred['genres'])
+        if not matching_datalinks:
+            print("No matching datalinks found.")
             continue
 
         # Download files
-        downloaded_files = retrieve_csv_files(nyx_client, matching_files)
+        downloaded_files = retrieve_csv_files(nyx_client, matching_datalinks)
 
         # Initial analysis of the user query
         print("Initial Analysis:")
-        print(analyze_csv_files(downloaded_files, user_query))
+        print(analyse_csv_files(downloaded_files, user_query))
 
         # Inner Loop for follow-up questions
         while True:
@@ -62,7 +62,7 @@ def main():
                 break
 
             print("Analysis Result:")
-            print(analyze_csv_files(downloaded_files, follow_up_query))
+            print(analyse_csv_files(downloaded_files, follow_up_query))
 
 ```
 Key Points:
@@ -71,14 +71,14 @@ Key Points:
 
 ## Data Retrieval with Nyx
 
-The chatbot uses Nyx SDK to retrieve files based on the inferred metadata from the user query. Here’s how the retrieval process works:
+The chatbot uses Nyx SDK to retrieve datalinks based on the inferred metadata from the user query. Here’s how the retrieval process works:
 
-### Search for Matching Files
+### Search for Matching DataLinks
 
-The chatbot searches for files using the inferred *Genre* and *Categories*:
+The chatbot searches for datalinks using the inferred *Genre* and *Categories*:
 
 ```python
-def search_nyx_for_files(client, categories, genres):
+def search_nyx(client, categories, genres):
     results = []
     for c in categories:
         for g in genres:
@@ -105,7 +105,7 @@ def retrieve_csv_files(client, data, download_path="./data"):
 ```
 
 ## Interaction with the LLM
-The chatbot uses OpenAI models to analyze the downloaded data. Depending on the user’s query, it either:
+The chatbot uses OpenAI models to analyse the downloaded data. Depending on the user’s query, it either:
 
 - Answers a specific question, or
 - Generates a summary of the data if the query is vague.
@@ -113,7 +113,7 @@ The chatbot uses OpenAI models to analyze the downloaded data. Depending on the 
 Here’s how the chatbot integrates the LLM for analysis:
 
 ```python
-def analyze_csv_files(files, query, model="gpt-4"):
+def analyse_csv_files(files, query, model="gpt-4"):
     # Combine data from all files
     dataframes = [pd.read_csv(file) for file in files]
     combined_data = pd.concat(dataframes)
@@ -123,20 +123,20 @@ def analyze_csv_files(files, query, model="gpt-4"):
     prompt = f"Data summary:\n{summary}\nUser query: {query}"
 
     # Call the OpenAI model
-    response = openai.ChatCompletion.create(
+    response = openai.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": prompt}],
         temperature=0,
     )
-    return response['choices'][0]['message']['content'].strip()
+    return response.choices[0].message.content.strip()
 ```
 
 Example:
 
 1. User Query: "Show me sales data for Europe."
-    - The chatbot retrieves relevant files from Nyx and provides an initial analysis.
+    - The chatbot retrieves relevant datalinks from Nyx and provides an initial analysis.
 2. Follow-Up Question: "What are the top-selling products?"
-    - The chatbot analyzes the retrieved data and answers the question using the LLM.
+    - The chatbot analyses the retrieved data and answers the question using the LLM.
 
 ## Conclusion
 This RAG chatbot demonstrates the power of combining Nyx for precise data retrieval with OpenAI's models for insightful analysis. 
